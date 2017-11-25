@@ -1,6 +1,6 @@
 var express = require('express');
 var app = express();
-bodyParser = require('body-parser');
+var bodyParser = require('body-parser');
 var concat = require('concat-image');
 var cloudinary = require('cloudinary');
 fs = require('fs');
@@ -11,38 +11,51 @@ cloudinary.config({
   api_secret: 'An2wIXbiWxjhNh5OpX8ehYY00Js' 
 });
 
-app.use(bodyParser.json());
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.route('/').post(function(req, res){
-  res.setHeader('Content-Type', 'application/json');
-  var imgOne = req.body.imgOne;
-  var imgTwo = req.body.imgTwo;
-  var imgThree = req.body.imgThree;
-  var mergedFileName = req.body.merged_filename;
+  // res.setHeader('Content-Type', 'application/json');
+  var location = req.body.location
+  var imgOne = location + '/green.' + req.body.green + '.png';
+  var imgTwo = location + '/yellow.' + req.body.yellow + '.png';
+  var imgThree = location + '/red.' + req.body.red + '.png';
+  var mergedFileName = guid();
   var margin = req.body.margin ? req.body.margin : 10;
-  if(!imgOne || !imgTwo || !imgThree || !mergedFileName){
-    res.send(JSON.stringify({'error':'invalid input params'}));
+
+  if(!imgOne || !imgTwo || !imgThree){
+    res.json({error:'invalid input params'});
   }
   
   var fileContents1;
   var fileContents2;
   var fileContents3;
+
   try {
     fileContents1 = fs.readFileSync('./img/' + imgOne);
   } catch (err) {
-    res.send(JSON.stringify({'error':'./img/' + imgOne + ' not found'}));
+    res.json({'error':'./img/' + imgOne + ' not found'});
   }
   try {
     fileContents2 = fs.readFileSync('./img/' + imgTwo);
   } catch (err) {
-    res.send(JSON.stringify({'error':'./img/' + imgTwo + ' not found'}));
+    res.json({'error':'./img/' + imgTwo + ' not found'});
   }
 
   try {
     fileContents3 = fs.readFileSync('./img/' + imgThree);
   } catch (err) {
-    console.log('./img/' + imgThree + ' not found');
+    res.json({'error':'./img/' + imgThree + ' not found'});
   }
 
   var images = [];
@@ -65,7 +78,7 @@ app.route('/').post(function(req, res){
 
   cloudinary.uploader.upload('./img_to_upload/' + mergedFileName +'.png', function(result) { 
     console.log(result);
-    res.send(JSON.stringify({ imageLink: result.url }));
+    res.json({ imageLink: result.url });
   })
 });
 
