@@ -33,7 +33,7 @@ app.route('/').post(function(req, res){
   var mergedFileName = guid();
   var margin = req.body.margin ? req.body.margin : 10;
 
-  if(!imgOne || !imgTwo || !imgThree){
+  if(!imgOne || !imgTwo || !imgThree || !location){
     res.json({error:'invalid input params'});
   }
   
